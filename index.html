@@ -73,7 +73,8 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
 .abs{position:absolute}
 .side-panel{flex:1 1 380px;max-width:460px;display:flex;flex-direction:column;gap:14px}
 @media (max-width:1100px){.side-panel{max-width:none}}
-.bubble{position:absolute;left:0;top:20px;width:150px;min-height:56px;transform:translateZ(232px) rotateZ(-45deg) rotateX(-58deg);padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:#fff;color:var(--ink);box-shadow:0 10px 24px rgba(38,39,43,.14);display:flex;flex-direction:column;align-items:center;gap:2px}
+.labels{position:absolute;inset:0;pointer-events:none;z-index:3}
+.bubble{position:absolute;left:0;top:0;visibility:hidden;pointer-events:auto;width:150px;min-height:56px;transform:translate(-50%,-100%);padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:#fff;color:var(--ink);box-shadow:0 10px 24px rgba(38,39,43,.14);display:flex;flex-direction:column;align-items:center;gap:2px}
 .bubble b{font-family:'Inter Tight',sans-serif;font-size:15px;letter-spacing:-.02em}
 .bubble small{font-size:12px;font-weight:600;color:var(--muted)}
 .bubble.on small{color:var(--blue-ink)}
@@ -120,6 +121,9 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
   .scene-card{height:auto;aspect-ratio:1/1.05;min-height:340px}
   .scene-head p,.legend{display:none}
   .stage{top:54%}
+  .bubble{width:auto;min-height:0;padding:4px 8px;border-radius:10px}
+  .bubble b{font-size:11px;white-space:nowrap}
+  .bubble small{display:none}
 }
 </style>
 </head>
@@ -262,12 +266,15 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
     h += '<div class="abs" style="left:116px;top:12px;width:24px;height:30px;background:#fff;box-shadow:0 1px 2px rgba(38,39,43,.2);transform:translateZ(50.5px) rotateZ(10deg)"></div>';
     if (a.plant) h += '<div class="abs billboard" style="left:4px;top:6px;width:30px;height:40px;transform:translateZ(50px) rotateZ(-45deg) rotateX(-58deg)">' + smallPlant + '</div>';
     h += '<div class="abs billboard" style="left:25px;top:-150px;width:100px;height:140px;transform:rotateZ(-45deg) rotateX(-58deg)">' + (a.owned ? personSvg(a, on) : chairSvg) + '</div>';
-    h += '<button type="button" class="' + cls + '" data-action="select" data-id="' + a.id + '" aria-pressed="' + picked + '" aria-label="' + a.who + ", " + a.name + " : " + badge + '"><b>' + a.who + " · " + a.short + '</b><small>' + badge + '</small></button>';
+    h += '<div class="abs" data-anchor="' + a.id + '" style="left:75px;top:45px;width:1px;height:1px;transform:translateZ(200px)"></div>';
+    LABELS.push('<button type="button" class="' + cls + '" data-action="select" data-id="' + a.id + '" aria-pressed="' + picked + '" aria-label="' + a.who + ", " + a.name + " : " + badge + '"><b>' + a.who + " · " + a.short + '</b><small>' + badge + '</small></button>');
     return h + "</div>";
   }
 
+  var LABELS = [];
   function room() {
     var h = "";
+    LABELS = [];
     h += '<div class="abs" style="inset:0;border-radius:4px;background:repeating-linear-gradient(90deg,rgba(120,84,40,.10) 0 1px,transparent 1px 96px),repeating-linear-gradient(0deg,rgba(120,84,40,.12) 0 1px,transparent 1px 24px),linear-gradient(135deg,#E9DAC2,#DCC7A6)"></div>';
     h += '<div class="abs" style="left:0;top:0;width:820px;height:620px;background:linear-gradient(180deg,rgba(38,39,43,.10),transparent 60px),linear-gradient(90deg,rgba(38,39,43,.08),transparent 60px);transform:translateZ(.5px)"></div>';
     h += '<div class="abs" style="left:92px;top:446px;width:190px;height:150px;border-radius:10px;background:repeating-linear-gradient(0deg,transparent 0 18px,rgba(59,91,255,.10) 18px 20px),#DDE3FF;box-shadow:inset 0 0 0 6px #C9D3FF;transform:translateZ(1px)"></div>';
@@ -350,6 +357,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
       '<section class="scene-card" id="scene" aria-label="Bureau en 3D : cliquez sur un employé ou un poste libre">' +
       '<div class="scene-head"><span class="mono eyebrow">Votre équipe virtuelle</span><p>8 postes, un par assistant. Cliquez sur un employé ou un poste libre.</p></div>' +
       '<div class="stage" id="stage"><div class="room">' + room() + '</div></div>' +
+      '<div class="labels" id="labels">' + LABELS.join("") + '</div>' +
       '<div class="legend"><span><i style="background:#3B5BFF"></i>Écran bleu : au travail</span><span><i style="background:#4A4E57"></i>Endormi : en pause</span><span><i style="border:1px dashed #8A8F9A"></i>Chaise vide : poste libre</span></div>' +
       '</section>' +
       '<div class="side-panel">' +
@@ -363,6 +371,23 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
     if (!scene || !stage) return;
     var s = Math.min(1, (scene.clientWidth - 40) / 1060, (scene.clientHeight - 60) / 820);
     stage.style.transform = "scale(" + Math.max(0.35, s).toFixed(3) + ")";
+    placeLabels();
+  }
+
+  // Les étiquettes restent en 2D (texte net) et suivent un point d'ancrage placé dans la scène 3D.
+  function placeLabels() {
+    var scene = document.getElementById("scene");
+    if (!scene) return;
+    var cr = scene.getBoundingClientRect();
+    var anchors = scene.querySelectorAll("[data-anchor]");
+    for (var i = 0; i < anchors.length; i++) {
+      var r = anchors[i].getBoundingClientRect();
+      var b = scene.querySelector('.bubble[data-id="' + anchors[i].getAttribute("data-anchor") + '"]');
+      if (!b) continue;
+      b.style.left = Math.round(r.left - cr.left) + "px";
+      b.style.top = Math.round(r.top - cr.top) + "px";
+      b.style.visibility = "visible";
+    }
   }
 
   // ---------- Vue classique ----------
