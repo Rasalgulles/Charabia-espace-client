@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Espace client · Charabia</title>
+<meta name="description" content="Prototype de l'espace client Charabia : bureau 3D et vue classique. Données fictives.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#F4F5F7; --card:#FFFFFF; --ink:#26272B; --text:#4A4E57; --muted:#5F6470;
+  --line:#E1E3E8; --line2:#D9DCE2; --blue:#3B5BFF; --blue-ink:#2D47E0; --blue-soft:#EEF1FF; --blue-light:#9DB0FF;
+  --off:#B9BEC8;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg) radial-gradient(rgba(38,39,43,.08) 1.4px,transparent 1.6px) 0 0/28px 28px;color:var(--text);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--blue-ink)}a:hover{color:var(--ink)}
+button{font:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.tight{font-family:'Inter Tight',sans-serif;font-weight:700;letter-spacing:-.03em;color:var(--ink)}
+.mono{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue-ink)}
+.eyebrow{display:inline-flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:7px;height:7px;border-radius:2px;background:var(--blue)}
+
+/* En-tête */
+.top{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.top-in{max-width:1560px;margin:0 auto;padding:12px 24px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:16px}
+.logo{display:inline-flex;flex-direction:column}
+.logo span{font-family:'Inter Tight',sans-serif;font-weight:700;font-size:26px;letter-spacing:-.04em;color:var(--ink);line-height:1}
+.logo svg{width:100%;height:7px;margin-top:3px}
+.pill-tag{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue-ink);padding:6px 10px;border-radius:999px;background:var(--blue-soft)}
+.right{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.switch-view{display:flex;gap:4px;padding:4px;border-radius:999px;background:#E9EBEF}
+.switch-view button{border:0;background:transparent;font-family:'Inter Tight',sans-serif;font-weight:700;font-size:14px;padding:11px 18px;border-radius:999px;color:var(--ink)}
+.switch-view button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.who{display:flex;flex-direction:column;align-items:flex-end}
+.who b{font-size:15px;color:var(--ink)}.who span{font-size:13px;color:var(--muted)}
+.avatar{width:44px;height:44px;border-radius:999px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Inter Tight',sans-serif;font-weight:700}
+.demo-note{max-width:1560px;margin:0 auto;padding:10px 24px 0;font-size:13px;color:var(--muted)}
+
+/* Cartes et éléments communs */
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:24px}
+.card h2{margin:0;font-size:22px}
+.dark{background:var(--ink);border:0;color:#D5D8DF}
+.dark h2{color:#fff}
+.btn{border:1px solid var(--blue);background:var(--blue);color:#fff;font-family:'Inter Tight',sans-serif;font-weight:700;font-size:14px;padding:12px 18px;border-radius:999px}
+.btn.ghost{background:#fff;border-color:var(--line2);color:var(--ink)}
+.done-tag{font-size:14px;font-weight:600;color:var(--ink);padding:10px 14px;border-radius:999px;background:var(--bg);white-space:nowrap}
+.toggle{flex:none;width:64px;height:44px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:0}
+.toggle .track{width:52px;height:30px;padding:3px;border-radius:999px;background:var(--off);display:flex;justify-content:flex-start;transition:background .2s}
+.toggle .knob{width:24px;height:24px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(38,39,43,.25)}
+.toggle[aria-checked="true"] .track{background:var(--blue);justify-content:flex-end}
+.row{display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.row .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.row .t{font-size:15px;font-weight:600;color:var(--ink)}
+.row .d{font-size:13px;color:var(--muted);line-height:1.4}
+
+/* ===== Vue bureau 3D ===== */
+.office{max-width:1560px;margin:0 auto;padding:20px 24px 32px;display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.scene-card{flex:999 1 640px;min-width:0;position:relative;background:var(--card);border:1px solid var(--line);border-radius:28px;overflow:hidden;height:min(860px,calc(100vh - 140px));min-height:520px}
+.scene-head{position:absolute;left:24px;top:20px;z-index:2;display:flex;flex-direction:column;gap:4px;pointer-events:none}
+.scene-head p{margin:0;font-size:15px;color:var(--muted)}
+.legend{position:absolute;left:24px;bottom:18px;z-index:2;display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend i{width:14px;height:10px;border-radius:2px;display:inline-block}
+.stage{position:absolute;left:50%;top:57%;width:0;height:0}
+.room{position:absolute;left:-410px;top:-310px;width:820px;height:620px;transform-style:preserve-3d;transform:rotateX(58deg) rotateZ(45deg)}
+.room *{transform-style:preserve-3d}
+.abs{position:absolute}
+.side-panel{flex:1 1 380px;max-width:460px;display:flex;flex-direction:column;gap:14px}
+@media (max-width:1100px){.side-panel{max-width:none}}
+.bubble{position:absolute;left:0;top:20px;width:150px;min-height:56px;transform:translateZ(232px) rotateZ(-45deg) rotateX(-58deg);padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:#fff;color:var(--ink);box-shadow:0 10px 24px rgba(38,39,43,.14);display:flex;flex-direction:column;align-items:center;gap:2px}
+.bubble b{font-family:'Inter Tight',sans-serif;font-size:15px;letter-spacing:-.02em}
+.bubble small{font-size:12px;font-weight:600;color:var(--muted)}
+.bubble.on small{color:var(--blue-ink)}
+.bubble.free{background:var(--bg);border-style:dashed;border-color:#8A8F9A}
+.bubble.sel{background:var(--blue);border:1px solid var(--blue);color:#fff}
+.bubble.sel small{color:#E3E8FF}
+.billboard{transform-origin:50% 100%}
+@keyframes cbType{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes cbZ{0%{opacity:0;transform:translateY(6px)}50%{opacity:1}100%{opacity:0;transform:translateY(-12px)}}
+@keyframes cbSway{0%,100%{transform:rotate(-1.2deg)}50%{transform:rotate(1.2deg)}}
+.typing{animation:cbType 1.2s ease-in-out infinite}
+.zz{position:absolute;right:-4px;top:-6px;font-family:'Inter Tight',sans-serif;font-weight:700;font-size:20px;color:var(--muted);animation:cbZ 2.4s ease-in-out infinite}
+.sway{transform-origin:50% 100%;animation:cbSway 6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.typing,.zz,.sway{animation:none}}
+.price-line{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-top:12px;border-top:1px solid var(--line)}
+.notice{margin:0;font-size:14px;line-height:1.45;color:var(--ink);padding:12px 14px;border-radius:14px;background:var(--blue-soft)}
+.badges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.badge{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:14px;background:var(--blue-soft);font-size:13px;font-weight:600;color:var(--ink)}
+.badge.no{background:var(--bg);opacity:.7}
+
+/* ===== Vue classique ===== */
+.classic{max-width:1280px;margin:0 auto;padding:32px 24px 56px;display:flex;flex-direction:column;gap:28px}
+.hello{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.hello h1{margin:10px 0 0;font-size:clamp(30px,4vw,44px);line-height:1.05;letter-spacing:-.045em}
+.kpis{display:flex;flex-wrap:wrap;gap:16px}
+.kpi{flex:1 1 220px;display:flex;flex-direction:column;gap:6px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px 24px}
+.kpi span{font-size:14px;color:var(--muted)}
+.kpi b{font-family:'Inter Tight',sans-serif;font-size:40px;letter-spacing:-.04em;color:var(--ink);line-height:1}
+.kpi small{font-size:13px;color:var(--muted)}
+.kpi.hot{background:var(--blue);border-color:var(--blue);box-shadow:0 16px 40px rgba(59,91,255,.28)}
+.kpi.hot span,.kpi.hot small{color:#E3E8FF}.kpi.hot b{color:#fff}
+.cols{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.col-main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.col-side{flex:1 1 340px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.kind{flex:none;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-ink);padding:6px 10px;border-radius:8px;background:var(--blue-soft);min-width:76px;text-align:center}
+.hist{display:flex;gap:16px;padding:14px 0;border-top:1px solid var(--line);font-size:15px;line-height:1.45}
+.hist span:first-child{flex:none;width:96px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted)}
+.wrap-row{flex-wrap:wrap}
+@media (max-width:700px){
+  .top{position:static}
+  .top-in,.office,.classic{padding-left:16px;padding-right:16px}
+  .demo-note{padding-left:16px;padding-right:16px}
+  .count-tag{display:none}
+  .scene-card{height:auto;aspect-ratio:1/1.05;min-height:340px}
+  .scene-head p,.legend{display:none}
+  .stage{top:54%}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Données fictives ----------
+  var AGENTS = [
+    { id: "agenda", who: "Camille", name: "Réservation & agenda", short: "Agenda", owned: false, x: 100, y: 130, price: "400 € + 19 €/mois", desc: "Prend les rendez-vous en ligne, les ajoute à votre agenda et envoie un rappel la veille.", plant: true },
+    { id: "site", who: "Léa", name: "Assistant du site", short: "Site", owned: false, x: 270, y: 130, price: "800 € + 49 €/mois", desc: "Répond 24h/24 aux questions de vos visiteurs, en FR, NL, DE et EN, et vous passe la main." },
+    { id: "visi", who: "Inès", name: "Visibilité", short: "Visibilité", owned: false, x: 440, y: 130, price: "400 € + 99 €/mois", desc: "Prépare vos publications Instagram, Facebook et Google, un article et une newsletter par mois.", plant: true },
+    { id: "pilot", who: "Thomas", name: "Pilotage", short: "Pilotage", owned: false, x: 610, y: 130, price: "400 € + 29 €/mois", desc: "Tableau de bord et rapport hebdomadaire : demandes, devis signés, provenance des clients." },
+    { id: "devis", who: "Hugo", name: "Devis intelligent", short: "Devis", owned: true, x: 100, y: 330, desc: "Transforme chaque demande en fiche claire avec une estimation selon vos tarifs.", stat: "12 demandes traitées", ids: ["p1"], skin: "#C98E6B", hair: "#2B211C", long: false, shirt: "#3B5BFF", mug: "#3B5BFF" },
+    { id: "mail", who: "Noah", name: "Assistant mail", short: "Mails", owned: true, x: 270, y: 330, desc: "Trie vos mails, résume la journée et prépare les réponses simples.", stat: "31 mails triés, 9 brouillons", ids: ["p2"], skin: "#F1C7A5", hair: "#C98B3B", long: false, shirt: "#26272B", mug: "#F07A52", plant: true },
+    { id: "admin", who: "Sofia", name: "Admin & relances", short: "Relances", owned: true, x: 440, y: 330, desc: "Relance les devis sans réponse et les impayés, classe vos factures pour le comptable.", stat: "3 relances envoyées", ids: ["p3"], skin: "#8D5B3E", hair: "#1E1A18", long: true, shirt: "#7FB78A", mug: "#26272B" },
+    { id: "avis", who: "Maxime", name: "Avis & fidélisation", short: "Avis", owned: true, x: 610, y: 330, desc: "Demande un avis Google après chaque chantier et prépare vos réponses.", stat: "aucune demande envoyée", ids: [], skin: "#F3D2B3", hair: "#5A3A28", long: false, shirt: "#9DB0FF", mug: "#7FB78A" }
+  ];
+  var ITEMS = {
+    p1: { kind: "Devis", agent: "devis", title: "Salle de bain · Mme Lambert", detail: "Douche à l’italienne · estimation 2 480 € HTVA", when: "Reçu aujourd’hui à 9 h 12" },
+    p2: { kind: "Réponse", agent: "mail", title: "M. Renard demande un créneau", detail: "Proposition préparée : jeudi 14 h ou vendredi 9 h", when: "Reçu hier à 18 h 05" },
+    p3: { kind: "Relance", agent: "admin", title: "Facture 2026-041 · Café du Centre", detail: "30 jours de retard · 640 € HTVA · relance polie prête", when: "À envoyer aujourd’hui" }
+  };
+  var HISTORY = [
+    ["Auj. 9:12", "Hugo a reçu une demande de devis (Mme Lambert) : fiche créée et estimation préparée."],
+    ["Auj. 7:00", "Noah a envoyé le résumé du matin sur WhatsApp : 2 demandes, 1 relance, 4 mails à lire."],
+    ["Hier 18:05", "Noah a préparé une réponse avec deux créneaux pour M. Renard."],
+    ["Hier 11:30", "Devis 2026-118 accepté par M. et Mme Collard : rendez-vous ajouté à l’agenda."],
+    ["Lun. 8:00", "Sofia a relancé la facture 2026-037 : payée le jour même."]
+  ];
+
+  var state = {
+    view: location.hash === "#classique" ? "classique" : "bureau",
+    sel: "devis",
+    on: { devis: true, mail: true, admin: true, avis: false },
+    done: {},
+    requested: {},
+    conges: false
+  };
+
+  function agent(id) { for (var i = 0; i < AGENTS.length; i++) if (AGENTS[i].id === id) return AGENTS[i]; return AGENTS[4]; }
+  function px(n) { return n + "px"; }
+  function todoCount() { return ["p1", "p2", "p3"].filter(function (i) { return !state.done[i]; }).length; }
+  function todoText() { var t = todoCount(); return t === 0 ? "Tout est validé" : t + (t > 1 ? " éléments à valider" : " élément à valider"); }
+
+  // ---------- En-tête commun ----------
+  function header() {
+    var team = AGENTS.filter(function (a) { return a.owned; });
+    var active = team.filter(function (a) { return state.on[a.id]; }).length;
+    return '<header class="top"><div class="top-in">' +
+      '<div class="brand"><div class="logo"><span>Charabia</span>' +
+      '<svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><path d="M1 4 q3.5 -3.5 7 0 t7 0 t7 0 t7 0 C33 4 36 4 40 4 L99 4" stroke="#3B5BFF" stroke-width="2.6" fill="none" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></div>' +
+      '<span class="pill-tag">Espace client</span></div>' +
+      '<div class="right">' +
+      '<div class="switch-view" role="group" aria-label="Affichage">' +
+      '<button type="button" data-action="view" data-view="bureau" aria-pressed="' + (state.view === "bureau") + '">Bureau 3D</button>' +
+      '<button type="button" data-action="view" data-view="classique" aria-pressed="' + (state.view === "classique") + '">Vue classique</button>' +
+      '</div>' +
+      '<span class="pill-tag count-tag">' + team.length + ' employés sur 8 · ' + active + ' au travail</span>' +
+      '<div class="who"><b>Plomberie Dubois</b><span>Pack Artisan</span></div>' +
+      '<span class="avatar" aria-hidden="true">MD</span>' +
+      '</div></div></header>' +
+      '<p class="demo-note">Prototype · Plomberie Dubois est un client fictif, toutes les données sont des exemples.</p>';
+  }
+
+  function toggle(id, label, checked) {
+    return '<button type="button" class="toggle" role="switch" aria-checked="' + checked + '" aria-label="' + label + '" data-action="toggle" data-id="' + id + '"><span class="track"><span class="knob"></span></span></button>';
+  }
+
+  // ---------- Vue bureau 3D ----------
+  function box(x, y, w, d, h, z, top, front, side, r) {
+    return '<div class="abs" style="left:' + px(x) + ';top:' + px(y) + ';width:' + px(w) + ';height:' + px(d) + ';transform:translateZ(' + px(z || 0) + ')">' +
+      '<div class="abs" style="left:0;top:' + px(d) + ';width:' + px(w) + ';height:' + px(h) + ';transform-origin:50% 0;transform:rotateX(90deg);background:' + front + '"></div>' +
+      '<div class="abs" style="left:' + px(w) + ';top:0;width:' + px(h) + ';height:' + px(d) + ';transform-origin:0 50%;transform:rotateY(-90deg);background:' + side + '"></div>' +
+      '<div class="abs" style="left:0;top:0;width:' + px(w) + ';height:' + px(d) + ';border-radius:' + px(r || 0) + ';transform:translateZ(' + px(h) + ');background:' + top + '"></div>' +
+      '</div>';
+  }
+
+  function plantSvg(pot, rim) {
+    return '<svg class="sway" viewBox="0 0 120 160" width="100%" height="100%" aria-hidden="true" style="display:block;overflow:visible">' +
+      '<g transform="rotate(-38 60 116)"><ellipse cx="60" cy="70" rx="11" ry="40" fill="#4C8A5C"/></g>' +
+      '<g transform="rotate(38 60 116)"><ellipse cx="60" cy="70" rx="11" ry="40" fill="#4C8A5C"/></g>' +
+      '<g transform="rotate(-62 60 116)"><ellipse cx="60" cy="78" rx="10" ry="34" fill="#6FAE7D"/></g>' +
+      '<g transform="rotate(62 60 116)"><ellipse cx="60" cy="78" rx="10" ry="34" fill="#6FAE7D"/></g>' +
+      '<g transform="rotate(-16 60 116)"><ellipse cx="60" cy="62" rx="12" ry="46" fill="#5E9E6E"/></g>' +
+      '<g transform="rotate(16 60 116)"><ellipse cx="60" cy="64" rx="11" ry="44" fill="#7FB78A"/></g>' +
+      '<path d="M36 114 H84 L78 158 H42 Z" fill="' + pot + '"/><rect x="32" y="108" width="56" height="12" rx="4" fill="' + rim + '"/></svg>';
+  }
+
+  function plant(fx, fy, size, pot, rim) {
+    var w = Math.round(120 * size), h = Math.round(160 * size);
+    return '<div class="abs billboard" style="left:' + px(fx - w / 2) + ';top:' + px(fy - h) + ';width:' + px(w) + ';height:' + px(h) + ';transform:rotateZ(-45deg) rotateX(-58deg)">' + plantSvg(pot, rim) + '</div>';
+  }
+
+  function personSvg(a, on) {
+    return '<svg class="' + (on ? "typing" : "") + '" viewBox="0 0 100 140" width="100" height="140" role="img" aria-label="' + a.who + (on ? ", au travail" : ", endormi : poste en pause") + '" style="display:block;overflow:visible">' +
+      '<rect x="20" y="60" width="60" height="78" rx="14" fill="#5F6470"/>' +
+      (a.long ? '<rect x="29" y="24" width="42" height="52" rx="20" fill="' + a.hair + '"/>' : "") +
+      '<path d="M24 138 V98 a26 26 0 0 1 52 0 V138 Z" fill="' + a.shirt + '"/>' +
+      '<rect x="44" y="62" width="12" height="14" rx="4" fill="' + a.skin + '"/>' +
+      '<rect x="37" y="106" width="26" height="9" rx="4.5" fill="#FFFFFF" opacity="0.9"/>' +
+      '<g transform="' + (on ? "rotate(0 50 62)" : "rotate(16 50 62)") + '">' +
+      '<circle cx="50" cy="46" r="19" fill="' + a.skin + '"/>' +
+      '<path d="M31 47 C30 31 40 25 50 25 C61 25 70 31 69 47 C65 39 57 36 50 36 C43 36 35 39 31 47 Z" fill="' + a.hair + '"/>' +
+      (on
+        ? '<circle cx="43" cy="48" r="2.4" fill="#26272B"/><circle cx="57" cy="48" r="2.4" fill="#26272B"/><path d="M44 55 q6 5 12 0" stroke="#26272B" stroke-width="2" fill="none" stroke-linecap="round"/>'
+        : '<path d="M40 49 q3 2.5 6 0 M54 49 q3 2.5 6 0" stroke="#26272B" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M47 56 h6" stroke="#26272B" stroke-width="2" stroke-linecap="round"/>') +
+      '</g></svg>' + (on ? "" : '<span class="zz" aria-hidden="true">z z</span>');
+  }
+
+  var chairSvg = '<svg viewBox="0 0 100 140" width="100" height="140" aria-hidden="true" style="display:block">' +
+    '<rect x="24" y="44" width="52" height="58" rx="16" fill="#9AA0AC"/><rect x="30" y="50" width="40" height="44" rx="12" fill="#B9BEC8"/>' +
+    '<rect x="18" y="98" width="64" height="14" rx="7" fill="#7C828E"/><rect x="47" y="112" width="6" height="14" fill="#5F6470"/>' +
+    '<path d="M26 134 L50 125 L74 134" stroke="#5F6470" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  var smallPlant = '<svg viewBox="0 0 120 160" width="100%" height="100%" aria-hidden="true" style="display:block;overflow:visible">' +
+    '<g transform="rotate(-30 60 116)"><ellipse cx="60" cy="74" rx="14" ry="38" fill="#5E9E6E"/></g>' +
+    '<g transform="rotate(30 60 116)"><ellipse cx="60" cy="74" rx="14" ry="38" fill="#7FB78A"/></g>' +
+    '<ellipse cx="60" cy="66" rx="14" ry="44" fill="#4C8A5C"/><path d="M34 112 H86 L80 158 H40 Z" fill="#FFFFFF" stroke="#D9DCE2" stroke-width="4"/></svg>';
+
+  function station(a) {
+    var on = a.owned && !!state.on[a.id];
+    var left = a.owned ? a.ids.filter(function (i) { return !state.done[i]; }).length : 0;
+    var req = !a.owned && !!state.requested[a.id];
+    var picked = state.sel === a.id;
+    var badge = a.owned ? (!on ? "En pause" : (left > 0 ? left + " à valider" : "À jour")) : (req ? "Demande envoyée" : "Poste libre");
+    var cls = "bubble" + (picked ? " sel" : "") + (on ? " on" : "") + (!a.owned && !picked ? " free" : "");
+    var h = '<div class="abs" style="left:' + px(a.x) + ';top:' + px(a.y) + ';width:150px;height:90px">';
+    h += '<div class="abs" style="left:-8px;top:6px;width:166px;height:96px;border-radius:14px;background:rgba(38,39,43,.12);filter:blur(6px);transform:translateZ(.6px)"></div>';
+    h += box(4, 6, 6, 78, 44, 0, "#C9CDD5", "#B9BEC8", "#C9CDD5", 1) + box(140, 6, 6, 78, 44, 0, "#C9CDD5", "#B9BEC8", "#C9CDD5", 1) + box(0, 0, 150, 90, 6, 44, "#FBFAF7", "#E1E3E8", "#D9DCE2", 4);
+    h += '<div class="abs" style="left:-3px;top:-3px;width:156px;height:96px;border-radius:6px;border:3px solid ' + (picked ? "#3B5BFF" : "transparent") + ';transform:translateZ(50.6px)"></div>';
+    h += '<div class="abs" style="left:66px;top:24px;width:18px;height:10px;border-radius:2px;background:#3A3B42;transform:translateZ(50.5px)"></div>';
+    h += '<div class="abs" style="left:35px;top:26px;width:80px;height:50px;transform-origin:50% 0;transform:translateZ(56px) rotateX(90deg);background:' + (on ? "linear-gradient(180deg,#4F6BFF,#2D47E0)" : "#3A3B42") + ';border:5px solid #26272B;border-radius:5px"></div>';
+    h += '<div class="abs" style="left:45px;top:48px;width:60px;height:16px;border-radius:3px;background:#D5D9E0;box-shadow:inset 0 0 0 2px #E9EBEF;transform:translateZ(50.5px)"></div>';
+    h += '<div class="abs" style="left:112px;top:52px;width:10px;height:14px;border-radius:5px;background:#C9CDD5;transform:translateZ(50.5px)"></div>';
+    h += '<div class="abs" style="left:12px;top:54px;width:14px;height:14px;border-radius:999px;background:#fff;border:3px solid ' + (a.mug || "#C9CDD5") + ';transform:translateZ(52px)"></div>';
+    h += '<div class="abs" style="left:116px;top:12px;width:24px;height:30px;background:#fff;box-shadow:0 1px 2px rgba(38,39,43,.2);transform:translateZ(50.5px) rotateZ(10deg)"></div>';
+    if (a.plant) h += '<div class="abs billboard" style="left:4px;top:6px;width:30px;height:40px;transform:translateZ(50px) rotateZ(-45deg) rotateX(-58deg)">' + smallPlant + '</div>';
+    h += '<div class="abs billboard" style="left:25px;top:-150px;width:100px;height:140px;transform:rotateZ(-45deg) rotateX(-58deg)">' + (a.owned ? personSvg(a, on) : chairSvg) + '</div>';
+    h += '<button type="button" class="' + cls + '" data-action="select" data-id="' + a.id + '" aria-pressed="' + picked + '" aria-label="' + a.who + ", " + a.name + " : " + badge + '"><b>' + a.who + " · " + a.short + '</b><small>' + badge + '</small></button>';
+    return h + "</div>";
+  }
+
+  function room() {
+    var h = "";
+    h += '<div class="abs" style="inset:0;border-radius:4px;background:repeating-linear-gradient(90deg,rgba(120,84,40,.10) 0 1px,transparent 1px 96px),repeating-linear-gradient(0deg,rgba(120,84,40,.12) 0 1px,transparent 1px 24px),linear-gradient(135deg,#E9DAC2,#DCC7A6)"></div>';
+    h += '<div class="abs" style="left:0;top:0;width:820px;height:620px;background:linear-gradient(180deg,rgba(38,39,43,.10),transparent 60px),linear-gradient(90deg,rgba(38,39,43,.08),transparent 60px);transform:translateZ(.5px)"></div>';
+    h += '<div class="abs" style="left:92px;top:446px;width:190px;height:150px;border-radius:10px;background:repeating-linear-gradient(0deg,transparent 0 18px,rgba(59,91,255,.10) 18px 20px),#DDE3FF;box-shadow:inset 0 0 0 6px #C9D3FF;transform:translateZ(1px)"></div>';
+    // Mur du fond
+    h += '<div class="abs" style="left:0;top:-230px;width:820px;height:230px;transform-origin:50% 100%;transform:rotateX(-90deg);background:linear-gradient(180deg,#FBFBFC,#F1F2F5);box-shadow:inset 0 -10px 0 #E1E3E8">' +
+      '<div class="abs" style="left:60px;top:46px;width:200px;height:112px;padding:12px 14px;border-radius:6px;background:#fff;border:6px solid #D9DCE2;display:flex;flex-direction:column;gap:8px"><span class="tight" style="font-size:15px">Semaine 45</span><span style="height:4px;width:140px;border-radius:2px;background:#3B5BFF"></span><span style="height:4px;width:110px;border-radius:2px;background:#9DB0FF"></span><span style="height:4px;width:150px;border-radius:2px;background:#9DB0FF"></span><span style="height:4px;width:80px;border-radius:2px;background:#F07A52"></span></div>' +
+      '<div class="abs" style="left:300px;top:22px;width:260px;height:128px;border:8px solid #fff;box-shadow:0 0 0 1px #D9DCE2;background:linear-gradient(180deg,#BFD6FF,#E9F1FF 70%,#D6E8D2 70%,#C3DDBE)"><div class="abs" style="left:114px;top:0;width:8px;height:112px;background:#fff"></div><div class="abs" style="left:20px;top:62px;width:40px;height:40px;border-radius:999px;background:#9CC79A"></div><div class="abs" style="left:170px;top:52px;width:54px;height:54px;border-radius:999px;background:#8BBC8A"></div></div>' +
+      '<div class="abs" style="left:596px;top:34px;display:flex;flex-direction:column"><span style="font-family:\'Inter Tight\',sans-serif;font-weight:700;font-size:34px;letter-spacing:-.04em;color:#26272B;line-height:1">Charabia</span><svg viewBox="0 0 100 8" preserveAspectRatio="none" style="width:150px;height:9px;margin-top:3px" aria-hidden="true"><path d="M1 4 q3.5 -3.5 7 0 t7 0 t7 0 t7 0 C33 4 36 4 40 4 L99 4" stroke="#3B5BFF" stroke-width="2.6" fill="none" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></div>' +
+      '<div class="abs" style="left:764px;top:30px;width:44px;height:44px;border-radius:999px;background:#fff;border:3px solid #26272B"><div class="abs" style="left:18px;top:7px;width:3px;height:14px;border-radius:2px;background:#26272B"></div><div class="abs" style="left:19px;top:18px;width:12px;height:3px;border-radius:2px;background:#3B5BFF"></div></div>' +
+      '</div>';
+    // Mur de gauche
+    h += '<div class="abs" style="left:-230px;top:0;width:230px;height:620px;transform-origin:100% 50%;transform:rotateY(90deg);background:linear-gradient(90deg,#EBEDF1,#E3E6EB);box-shadow:inset -10px 0 0 #D9DCE2">' +
+      '<div class="abs" style="left:40px;top:18px;width:118px;height:96px;border:7px solid #fff;box-shadow:0 0 0 1px #D9DCE2;background:linear-gradient(90deg,#BFD6FF,#E9F1FF)"><div class="abs" style="left:50px;top:0;width:5px;height:82px;background:#fff"></div></div>' +
+      '<div class="abs" style="left:70px;top:448px;width:64px;height:52px;border:4px solid #26272B;background:linear-gradient(135deg,#3B5BFF 0 50%,#9DB0FF 50%)"></div>' +
+      '<div class="abs" style="left:70px;top:512px;width:64px;height:52px;border:4px solid #26272B;background:radial-gradient(circle at 40% 60%,#F07A52 0 14px,#F7F8FA 15px)"></div>' +
+      '</div>';
+    // Mobilier
+    h += box(290, 6, 280, 36, 52, 0, "#F7F8FA", "linear-gradient(90deg,#E9EBEF 0 33%,#D9DCE2 33% 33.6%,#E9EBEF 33.6% 66%,#D9DCE2 66% 66.6%,#E9EBEF 66.6%)", "#D5D9E0", 4);
+    h += box(640, 6, 170, 48, 86, 0, "#F7F8FA", "linear-gradient(90deg,#E9EBEF 0 49%,#D9DCE2 49% 51%,#E9EBEF 51%)", "#D5D9E0", 4);
+    h += box(660, 14, 34, 28, 44, 86, "#3A3B42", "#26272B", "#3A3B42", 4);
+    h += box(712, 20, 11, 11, 12, 86, "#FFFFFF", "#E9EBEF", "#E1E3E8", 6);
+    h += box(730, 26, 11, 11, 12, 86, "#3B5BFF", "#2D47E0", "#2D47E0", 6);
+    h += box(760, 16, 34, 26, 16, 86, "#F07A52", "#D9653F", "#E06D47", 3);
+    h += box(4, 120, 34, 200, 160, 0, "#E9EBEF", "#D5D9E0", "repeating-linear-gradient(90deg,#C9CDD5 0 6px,transparent 6px 40px),repeating-linear-gradient(0deg,#3B5BFF 0 10px,#E1E3E8 10px 13px,#26272B 13px 21px,#7FB78A 21px 29px,#D9A27A 29px 37px,#9DB0FF 37px 45px)", 2);
+    h += box(8, 440, 64, 156, 34, 0, "#9DB0FF", "#8FA3FF", "#8FA3FF", 8);
+    h += box(8, 440, 22, 156, 72, 0, "#8FA3FF", "#7F95F5", "#8FA3FF", 6);
+    h += box(8, 432, 64, 14, 50, 0, "#7F95F5", "#7F95F5", "#8FA3FF", 5);
+    h += box(8, 590, 64, 14, 50, 0, "#7F95F5", "#7F95F5", "#8FA3FF", 5);
+    h += box(120, 486, 84, 74, 30, 0, "#FFFFFF", "#E1E3E8", "#D5D9E0", 8);
+    h += box(140, 500, 26, 18, 4, 30, "#3B5BFF", "#2D47E0", "#2D47E0", 1);
+    h += box(700, 470, 100, 62, 58, 0, "#F7F8FA", "linear-gradient(180deg,#E9EBEF 0 48%,#D9DCE2 48% 52%,#E9EBEF 52%)", "#D5D9E0", 4);
+    h += box(712, 478, 76, 46, 26, 58, "#E9EBEF", "#C9CDD5", "#B9BEC8", 4);
+    h += box(724, 484, 52, 14, 4, 84, "#FFFFFF", "#FFFFFF", "#E9EBEF", 1);
+    // Plantes
+    h += plant(44, 70, 1.05, "#F7F8FA", "#E1E3E8") + plant(605, 44, 0.8, "#D9A27A", "#C98B5F") + plant(790, 610, 1.1, "#26272B", "#3A3B42") + plant(330, 610, 0.85, "#F7F8FA", "#E1E3E8") + plant(786, 452, 0.7, "#D9A27A", "#C98B5F");
+    // Postes
+    AGENTS.forEach(function (a) { h += station(a); });
+    return h;
+  }
+
+  function selectedPanel() {
+    var a = agent(state.sel);
+    var on = a.owned && !!state.on[a.id];
+    var req = !a.owned && !!state.requested[a.id];
+    var h = '<section class="card" aria-labelledby="poste-titre" style="display:flex;flex-direction:column;gap:10px;box-shadow:0 12px 32px rgba(38,39,43,.06)">';
+    h += '<div style="display:flex;align-items:center;gap:12px"><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">' +
+      '<span class="mono">' + (a.owned ? "Dans votre équipe" : "Poste libre") + '</span>' +
+      '<h2 id="poste-titre" class="tight" style="font-size:24px">' + a.who + " · " + a.name + '</h2></div>' +
+      (a.owned ? toggle(a.id, (on ? "Mettre en pause : " : "Activer : ") + a.who, on) : "") + '</div>';
+    h += '<p style="margin:0;font-size:14px;line-height:1.45">' + a.desc + '</p>';
+    h += '<span style="font-size:13px;font-weight:600;color:' + (on ? "var(--blue-ink)" : "var(--muted)") + '">' +
+      (a.owned ? (on ? "Au travail · " : "En pause · ") + a.stat : (req ? "Arrivée prévue après installation" : "Pas encore dans votre équipe")) + '</span>';
+    if (a.owned) {
+      a.ids.forEach(function (i) {
+        var it = ITEMS[i];
+        h += '<div class="row"><div class="grow"><span class="t">' + it.title + '</span><span class="d">' + it.detail + '</span></div>' +
+          (state.done[i] ? '<span class="done-tag">Envoyé</span>' : '<button type="button" class="btn" data-action="validate" data-id="' + i + '">Valider et envoyer</button>') + '</div>';
+      });
+      if (!a.ids.length) h += '<p class="row" style="margin:0;font-size:14px;color:var(--muted)">' + (on ? a.who + " n’a rien à valider : un avis sera demandé après votre prochain chantier." : a.who + " dort à son bureau. Activez son poste pour le réveiller.") + '</p>';
+    } else {
+      h += '<div class="price-line"><span style="font-size:14px;color:var(--muted)">Module à ajouter</span><span class="tight" style="font-size:18px">' + a.price + ' <small style="font-family:Inter,sans-serif;font-weight:500;font-size:13px;color:var(--muted)">HTVA</small></span></div>';
+      h += req ? '<p class="notice">Demande envoyée. Charabia vous recontacte sous deux jours ouvrables pour l’installer.</p>'
+               : '<button type="button" class="btn" data-action="request" data-id="' + a.id + '">Ajouter ' + a.who + ' à mon équipe</button>';
+    }
+    return h + "</section>";
+  }
+
+  function badges() {
+    var list = [["Premier devis signé", true], ["10 h gagnées", true], ["5 semaines d’affilée", true], ["Zéro impayé", !!state.done.p3], ["50 demandes traitées", false], ["10 avis Google", false]];
+    var got = list.filter(function (b) { return b[1]; }).length;
+    var h = '<section class="card" aria-labelledby="badges-titre"><h2 id="badges-titre" class="tight" style="font-size:20px">Réussites · ' + got + '/6</h2><div class="badges">';
+    list.forEach(function (b) {
+      h += '<div class="badge' + (b[1] ? "" : " no") + '"><svg viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="' + (b[1] ? "Obtenu" : "Pas encore obtenu") + '"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z" stroke="' + (b[1] ? "#3B5BFF" : "#8A8F9A") + '" stroke-width="1.8" fill="none" stroke-linejoin="round"/></svg>' + b[0] + '</div>';
+    });
+    return h + "</div></section>";
+  }
+
+  function bureauView() {
+    return '<main class="office">' +
+      '<section class="scene-card" id="scene" aria-label="Bureau en 3D : cliquez sur un employé ou un poste libre">' +
+      '<div class="scene-head"><span class="mono eyebrow">Votre équipe virtuelle</span><p>8 postes, un par assistant. Cliquez sur un employé ou un poste libre.</p></div>' +
+      '<div class="stage" id="stage"><div class="room">' + room() + '</div></div>' +
+      '<div class="legend"><span><i style="background:#3B5BFF"></i>Écran bleu : au travail</span><span><i style="background:#4A4E57"></i>Endormi : en pause</span><span><i style="border:1px dashed #8A8F9A"></i>Chaise vide : poste libre</span></div>' +
+      '</section>' +
+      '<div class="side-panel">' +
+      '<section class="card dark" aria-labelledby="temps-titre" style="display:flex;flex-direction:column;gap:8px"><span class="mono" style="color:#9DB0FF">Cette semaine</span><h2 id="temps-titre" class="tight" style="font-size:30px;color:#fff">3 h 20 <span style="color:#9DB0FF">gagnées</span></h2><div style="display:flex;flex-wrap:wrap;gap:6px 20px;font-size:14px"><span>12 demandes traitées</span><span>31 mails triés</span><span>' + todoText() + '</span></div></section>' +
+      selectedPanel() + badges() +
+      '</div></main>';
+  }
+
+  function fitScene() {
+    var scene = document.getElementById("scene"), stage = document.getElementById("stage");
+    if (!scene || !stage) return;
+    var s = Math.min(1, (scene.clientWidth - 40) / 1060, (scene.clientHeight - 60) / 820);
+    stage.style.transform = "scale(" + Math.max(0.35, s).toFixed(3) + ")";
+  }
+
+  // ---------- Vue classique ----------
+  function classicView() {
+    var open = ["p1", "p2", "p3"].filter(function (i) { return !state.done[i]; }).length;
+    var h = '<main class="classic">';
+    h += '<section class="hello"><div><span class="mono eyebrow">Semaine du 2 au 8 novembre</span><h1 class="tight">Bonjour Marc, <span style="color:var(--blue)">3 h 20 gagnées</span> cette semaine.</h1></div></section>';
+    h += '<section class="kpis" aria-label="Chiffres de la semaine">' +
+      '<div class="kpi"><span>Demandes reçues</span><b>12</b><small>dont 4 via WhatsApp</small></div>' +
+      '<div class="kpi"><span>Devis envoyés</span><b>5</b><small>2 acceptés · 8 960 € HTVA</small></div>' +
+      '<div class="kpi"><span>Mails triés</span><b>31</b><small>9 brouillons préparés</small></div>' +
+      '<div class="kpi hot"><span>Relances envoyées</span><b>3</b><small>1 facture payée depuis</small></div></section>';
+    h += '<div class="cols"><div class="col-main">';
+    h += '<section class="card" aria-labelledby="valider-titre"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px"><h2 id="valider-titre" class="tight" style="font-size:24px">À valider</h2><span class="pill-tag" style="text-transform:none;letter-spacing:0;font-family:Inter,sans-serif;font-weight:600;font-size:14px">' + (open ? open + " à valider" : "Tout est validé") + '</span></div>' +
+      '<p style="margin:0 0 10px;font-size:15px;color:var(--muted)">Rien ne part sans votre accord. Vous pouvez aussi valider directement sur WhatsApp.</p>';
+    ["p1", "p2", "p3"].forEach(function (i) {
+      var it = ITEMS[i], a = agent(it.agent), d = state.done[i];
+      h += '<div class="row wrap-row" style="padding:18px 0"><span class="kind">' + it.kind + '</span><div class="grow" style="flex:1 1 240px"><span class="t" style="font-size:16px">' + it.title + '</span><span class="d" style="font-size:14px;color:var(--text)">' + it.detail + '</span><span class="d">' + it.when + ' · préparé par ' + a.who + '</span></div>' +
+        (d ? '<span class="done-tag">' + (d === "edit" ? "Ouvert dans votre boîte mail" : "Envoyé") + '</span>'
+           : '<div style="display:flex;gap:8px"><button type="button" class="btn ghost" data-action="edit" data-id="' + i + '">Modifier</button><button type="button" class="btn" data-action="validate" data-id="' + i + '">Valider et envoyer</button></div>') + '</div>';
+    });
+    h += '</section>';
+    h += '<section class="card" aria-labelledby="hist-titre"><h2 id="hist-titre" class="tight" style="font-size:24px;margin-bottom:6px">Ce qui a été fait pour vous</h2>';
+    HISTORY.forEach(function (r) { h += '<div class="hist"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>'; });
+    h += '</section></div><div class="col-side">';
+    h += '<section class="card" aria-labelledby="autos-titre"><h2 id="autos-titre" class="tight" style="font-size:24px;margin-bottom:6px">Mon équipe</h2>';
+    AGENTS.filter(function (a) { return a.owned; }).forEach(function (a) {
+      var on = !!state.on[a.id];
+      h += '<div class="row"><div class="grow"><span class="t" style="font-size:16px">' + a.who + " · " + a.name + '</span><span class="d">' + a.desc + '</span><span class="d" style="font-weight:600;color:' + (on ? "var(--blue-ink)" : "var(--muted)") + '">' + (on ? "Actif" : "En pause") + " · " + a.stat + '</span></div>' + toggle(a.id, (on ? "Mettre en pause : " : "Activer : ") + a.who, on) + '</div>';
+    });
+    h += '<p class="row" style="margin:0;font-size:14px;color:var(--muted)">4 autres assistants disponibles : Camille, Léa, Inès et Thomas. <a href="#" data-action="view" data-view="bureau">Les voir dans le bureau</a></p></section>';
+    h += '<section class="card" aria-labelledby="infos-titre"><h2 id="infos-titre" class="tight" style="font-size:24px">Mes infos</h2><p style="margin:4px 0 8px;font-size:14px;color:var(--muted)">Vos assistants utilisent ces infos pour répondre à vos clients.</p>' +
+      '<div class="row"><div class="grow"><span class="t" style="font-size:16px">Mode congés</span><span class="d" style="color:' + (state.conges ? "var(--blue-ink)" : "var(--muted)") + '">' + (state.conges ? "Activé : vos clients sont prévenus de votre absence" : "Désactivé") + '</span></div>' + toggle("conges", "Mode congés", state.conges) + '</div>';
+    [["Horaires", "Lun – ven, 7 h 30 – 18 h"], ["Zone d’intervention", "Verviers et 25 km autour"], ["Grille de prix", "14 prestations · mise à jour le 28 octobre"], ["Ton des réponses", "Vouvoiement, chaleureux"]].forEach(function (r) {
+      h += '<div class="row"><div class="grow"><span class="d">' + r[0] + '</span><span class="t">' + r[1] + '</span></div><a href="#" data-action="noop" style="font-size:14px;font-weight:600;padding:12px 4px">Modifier</a></div>';
+    });
+    h += '</section>';
+    h += '<section class="card dark" style="display:flex;flex-direction:column;gap:12px"><h2 class="tight" style="font-size:22px;color:#fff">Une question ?</h2><p style="margin:0;font-size:15px;line-height:1.5">Écrivez-nous sur WhatsApp, on répond dans la journée.</p><a href="#" data-action="noop" class="btn" style="align-self:flex-start;text-decoration:none">Contacter Charabia →</a></section>';
+    h += '</div></div></main>';
+    return h;
+  }
+
+  // ---------- Rendu et interactions ----------
+  var app = document.getElementById("app");
+  function render() {
+    var y = window.scrollY;
+    app.innerHTML = header() + (state.view === "bureau" ? bureauView() : classicView());
+    if (state.view === "bureau") fitScene();
+    window.scrollTo(0, y);
+  }
+
+  app.addEventListener("click", function (e) {
+    var el = e.target.closest("[data-action]");
+    if (!el) return;
+    var act = el.getAttribute("data-action"), id = el.getAttribute("data-id");
+    if (el.tagName === "A") e.preventDefault();
+    if (act === "view") {
+      state.view = el.getAttribute("data-view");
+      history.replaceState(null, "", state.view === "classique" ? "#classique" : "#bureau");
+      window.scrollTo(0, 0);
+    } else if (act === "select") state.sel = id;
+    else if (act === "toggle") { if (id === "conges") state.conges = !state.conges; else state.on[id] = !state.on[id]; }
+    else if (act === "validate") state.done[id] = "ok";
+    else if (act === "edit") state.done[id] = "edit";
+    else if (act === "request") state.requested[id] = true;
+    else return;
+    var focusKey = act + ":" + (id || el.getAttribute("data-view") || "");
+    render();
+    var again = app.querySelector('[data-action="' + act + '"]' + (id ? '[data-id="' + id + '"]' : (el.getAttribute("data-view") ? '[data-view="' + el.getAttribute("data-view") + '"]' : "")));
+    if (again && focusKey) again.focus({ preventScroll: true });
+  });
+
+  window.addEventListener("resize", fitScene);
+  window.addEventListener("hashchange", function () {
+    var v = location.hash === "#classique" ? "classique" : "bureau";
+    if (v !== state.view) { state.view = v; render(); }
+  });
+  render();
+})();
+</script>
+</body>
+</html>
